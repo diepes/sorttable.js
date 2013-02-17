@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+<title>sorttable: Make all your tables sortable</title>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="sorttable.js"></script>
+
+<style type="text/css">
+/* Sortable tables */
+table.sortable thead {
+    background-color:#eee;
+    color:#666666;
+    font-weight: bold;
+    cursor: default;
+}
+</style>
+</head>
+
+<body id="www-kryogenix-org-sortable">
+<header>
+<h1>h1 in header section</h1>
+</header>
+<div id="content">
+<h1>sorttable: Make all your tables sortable</h1>
+
+<table class="sortable">
+<thead>
+  <tr><td>PersonA</td><td>Monthly pay</td></tr>
+</thead>
+<tbody>
+  <tr><td>Jan Molby</td><td>R12,000</td></tr>
+  <tr><td>Steve Nicol</td><td>R8,500</td></tr>
+  <tr><td>Steve McMahon</td><td>R9,200</td></tr>
+  <tr><td>John Barnes</td><td>R15,300</td></tr>
+</tbody>
+<tfoot>
+  <tr><td>TOTAL</td><td>R45,000</td></tr>
+</tfoot>
+</table>
+
+
+<hr/>
+
+
+<table class="sortable">
+<thead><tr><th>Number (spelled)</th><th>Person</th></tr></thead>
+<tr><td sorttable_customkey="2">two</td><td>Jan</td></tr>
+<tr><td sorttable_customkey="3">three</td><td>Bruce</td></tr>
+<tr><td sorttable_customkey="1">one</td><td>Steve</td></tr>
+</table>
+
+
+
+</div>
+</body>
+</html>
+
