@@ -1,8 +1,15 @@
 /*
   SortTable
+  version 3
+  17th February 2013
+  Licenced as GPL3
+  Fix multi table support in one page.
+
   version 2
   7th April 2007
   Stuart Langridge, http://www.kryogenix.org/code/browser/sorttable/
+  Licenced as X11: http://www.kryogenix.org/code/browser/licence.html (MIT)
+  This basically means: do what you want with it.
 
   Instructions:
   Download this file
@@ -11,9 +18,7 @@
   Click on the headers to sort
 
   Thanks to many, many people for contributions and suggestions.
-  Licenced as X11: http://www.kryogenix.org/code/browser/licence.html
-  This basically means: do what you want with it.
-*/
+  */
 
 
 var stIsIE = /*@cc_on!@*/false;
@@ -30,16 +35,17 @@ sorttable = {
     if (!document.createElement || !document.getElementsByTagName) return;
 
     sorttable.DATE_RE = /^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/;
-
+    var num = 1;
     forEach(document.getElementsByTagName('table'), function(table) {
       if (table.className.search(/\bsortable\b/) != -1) {
-        sorttable.makeSortable(table);
+        sorttable.makeSortable(table,num);
+        num = num + 1;
       }
     });
 
   },
 
-  makeSortable: function(table) {
+  makeSortable: function(table,num) {
     if (table.getElementsByTagName('thead').length == 0) {
       // table doesn't have a tHead. Since it should have, create one and
       // put the first table row in it.
@@ -51,28 +57,6 @@ sorttable = {
     if (table.tHead == null) table.tHead = table.getElementsByTagName('thead')[0];
 
     if (table.tHead.rows.length != 1) return; // can't cope with two header rows
-
-    // Sorttable v1 put rows with a class of "sortbottom" at the bottom (as
-    // "total" rows, for example). This is B&R, since what you're supposed
-    // to do is put them in a tfoot. So, if there are sortbottom rows,
-    // for backwards compatibility, move them to tfoot (creating it if needed).
-    sortbottomrows = [];
-    for (var i=0; i<table.rows.length; i++) {
-      if (table.rows[i].className.search(/\bsortbottom\b/) != -1) {
-        sortbottomrows[sortbottomrows.length] = table.rows[i];
-      }
-    }
-    if (sortbottomrows) {
-      if (table.tFoot == null) {
-        // table doesn't have a tfoot. Create one.
-        tfo = document.createElement('tfoot');
-        table.appendChild(tfo);
-      }
-      for (var i=0; i<sortbottomrows.length; i++) {
-        tfo.appendChild(sortbottomrows[i]);
-      }
-      delete sortbottomrows;
-    }
 
     // work through each column and calculate its type
     headrow = table.tHead.rows[0].cells;
@@ -89,17 +73,19 @@ sorttable = {
 	      // make it clickable to sort
 	      headrow[i].sorttable_columnindex = i;
 	      headrow[i].sorttable_tbody = table.tBodies[0];
+	      //PES201302 found bug, need individual id per table.
+              headrow[i].sorttable_tablenum = num.toString();
 	      dean_addEvent(headrow[i],"click", sorttable.innerSortFunction = function(e) {
-
+          //PES201302 on click function !!!
           if (this.className.search(/\bsorttable_sorted\b/) != -1) {
             // if we're already sorted by this column, just
             // reverse the table, which is quicker
             sorttable.reverse(this.sorttable_tbody);
             this.className = this.className.replace('sorttable_sorted',
                                                     'sorttable_sorted_reverse');
-            this.removeChild(document.getElementById('sorttable_sortfwdind'));
+            this.removeChild(document.getElementById('sorttable_sortfwdind'+this.sorttable_tablenum));
             sortrevind = document.createElement('span');
-            sortrevind.id = "sorttable_sortrevind";
+            sortrevind.id = "sorttable_sortrevind"+this.sorttable_tablenum;
             sortrevind.innerHTML = stIsIE ? '&nbsp<font face="webdings">5</font>' : '&nbsp;&#x25B4;';
             this.appendChild(sortrevind);
             return;
@@ -110,9 +96,11 @@ sorttable = {
             sorttable.reverse(this.sorttable_tbody);
             this.className = this.className.replace('sorttable_sorted_reverse',
                                                     'sorttable_sorted');
-            this.removeChild(document.getElementById('sorttable_sortrevind'));
+	    //PES debug
+	    //alert("debug1 "+ document.getElementById('sorttable_sortrevind'+this.sorttable_tablenum).innerHTML);
+            this.removeChild(document.getElementById('sorttable_sortrevind'+this.sorttable_tablenum));
             sortfwdind = document.createElement('span');
-            sortfwdind.id = "sorttable_sortfwdind";
+            sortfwdind.id = "sorttable_sortfwdind"+this.sorttable_tablenum;
             sortfwdind.innerHTML = stIsIE ? '&nbsp<font face="webdings">6</font>' : '&nbsp;&#x25BE;';
             this.appendChild(sortfwdind);
             return;
@@ -126,14 +114,14 @@ sorttable = {
               cell.className = cell.className.replace('sorttable_sorted','');
             }
           });
-          sortfwdind = document.getElementById('sorttable_sortfwdind');
+          sortfwdind = document.getElementById('sorttable_sortfwdind'+this.sorttable_tablenum);
           if (sortfwdind) { sortfwdind.parentNode.removeChild(sortfwdind); }
-          sortrevind = document.getElementById('sorttable_sortrevind');
+          sortrevind = document.getElementById('sorttable_sortrevind'+this.sorttable_tablenum);
           if (sortrevind) { sortrevind.parentNode.removeChild(sortrevind); }
 
           this.className += ' sorttable_sorted';
           sortfwdind = document.createElement('span');
-          sortfwdind.id = "sorttable_sortfwdind";
+          sortfwdind.id = "sorttable_sortfwdind"+this.sorttable_tablenum;
           sortfwdind.innerHTML = stIsIE ? '&nbsp<font face="webdings">6</font>' : '&nbsp;&#x25BE;';
           this.appendChild(sortfwdind);
 
@@ -169,7 +157,7 @@ sorttable = {
     for (var i=0; i<table.tBodies[0].rows.length; i++) {
       text = sorttable.getInnerText(table.tBodies[0].rows[i].cells[column]);
       if (text != '') {
-        if (text.match(/^-?[£$¤]?[\d,.]+%?$/)) {
+        if (text.match(/^-?[R£$¤]?[\d,.]+%?$/)) {
           return sorttable.sort_numeric;
         }
         // check for a date: dd/mm/yyyy or dd/mm/yy
